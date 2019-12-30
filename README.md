@@ -4,9 +4,9 @@
 We present an automated workflow to monitor the surface reflectivity of roofs and pavements in urban areas. We built on the methods developed in [Ban-Weiss et al. 2015a](https://www.sciencedirect.com/science/article/abs/pii/S0038092X14005088/ "Ban-Weiss et al. 2015a")  & [2015b](https://www.sciencedirect.com/science/article/abs/pii/S0038092X14005283/ "2015b") and scale them through cloud computing and machine learning. We use official footprint data from LA city, Microsoft building footprints and OpenStreetMap/SharedStreet API to get geometries of roofs and streets. Using open-source satellite imagery from National Agriculture Imagery Program (NAIP), ground truth measurements collected through project partners, and regression machine learning we create a high-resolution map of surface reflectivity for multiple urban areas in the United States for multiple time periods. The resulting data and maps provide an estimate of the existing surface reflectivity at a building and street-segment scale which can be superimposed with current heat vulnerability, green infrastructure, urban morphology, and urban heat data. This tool serves cities in developing and evaluating urban heat island reduction strategies and promoting extensive adoption of urban heat mitigation programs. 
 
 ### Summary:
-This repository contains a comprehensive set of instructions for creating and applying models that estimate surface reflectivity of roofs and streets for different urban areas in the United States using machine learning. Example results for roofs are available for Los Angeles County [Los Angeles County](https://worldresources.maps.arcgis.com/apps/webappviewer/index.html?id=abb41b4ba5504d848d4715eb2537c317/ "Los Angeles County") and [Kansas City metro area](https://worldresources.maps.arcgis.com/apps/webappviewer/index.html?id=4fba84cf6c314c7d9937ed616d7366f4 "Kansas City metro area"). Example results for streets are available for [City of Los Angeles](https://worldresources.maps.arcgis.com/apps/webappviewer/index.html?id=9e026352d94148319272896336fb0035 "City of Los Angeles")
+This repository contains a comprehensive set of instructions for creating and applying models that estimate surface reflectivity of roofs and streets for different urban areas in the United States using machine learning. Example results for roofs are available for Los Angeles County [Los Angeles County](https://worldresources.maps.arcgis.com/apps/webappviewer/index.html?id=abb41b4ba5504d848d4715eb2537c317/ "Los Angeles County") and [Kansas City metro area](https://worldresources.maps.arcgis.com/apps/webappviewer/index.html?id=4fba84cf6c314c7d9937ed616d7366f4 "Kansas City metro area"). Example results for streets are available for [City of Los Angeles](https://worldresources.maps.arcgis.com/apps/webappviewer/index.html?id=9e026352d94148319272896336fb0035 "City of Los Angeles"). These results are browsable and queryable through the ArcGIS webapps and also using a [Jupyter Notebook](https://github.com/wri/UrbanHeatMitigation/blob/master/notebooks/API/core_query_roof_albedo_ArcGISonline.ipynb). To run the Jupyter notebook, click this [link](https://mybinder.org/v2/gh/Taufiq06/UrbanHeatMitigation/master), the notebook server will launch. It might take few minutes to launch. Once the notebook server launches, navigate to: `notebooks/API` and open `core_query_roof_albedo_ArcGISonline.ipynb`. If you get a prompt to set kernel, choose Python `conda env:notebook`. Then restart and run all the cells. Instructions and comments are given within the notebook to perform different queries. You also need to upload the AOI (geojson or shapefile) to filter the query on a given geometry. Once you are here: `notebooks/API`, you will be able to upload file from your local machine through the upload button. Change the name of the file within the notebook to match your file name. 
 
-The workflow is compressed within a set of Jupyter notebooks. The step by step instructions within the notebooks are the best way to understand the whole workflow. The training and prediction of the model is done using Azure Machine Learning Studio.
+The whole workflow is compressed within a set of Jupyter notebooks. The step by step instructions within the notebooks are the best way to understand the whole workflow. The training and prediction of the model is done using Azure Machine Learning Studio.
 
 ### Requirements:
 All listed notebooks are written for Python 3.6. The libraries and packages required to execute the notebooks are listed in the imports block at the beginning of each. In general, these are standard geospatial and data analysis Python libraries.
@@ -14,7 +14,14 @@ Several parts of the workflow utilize the `descarteslabs` package for imagery re
 
 ### Inputs:
 #### Training/validation: 
-* measured or known albedo values of specific materials/sites at specific times. We collected roof and pavement albedo measurements from roof manufactures installers and researchers. Currently we have known albedo values associated with specific measurement or installation dates for over 30,000 unique roofs or pavement location in approximately 45 US states. However, most of the roof samples were associated with high albedo values and there were very small number of samples with low albedo values. So, we employed two techniques to cover up the lack of training data: pixel sampling and SMOTE. Rather than using all the pixels within a roof or street, we selected 20 random pixels as input. This gave us the opportunity to select multiple sample of 20 pixels from underrepresented cases. SMOTE (Synthetic Minority Oversampling Technique) is a method in Azure Machine Learning Studio (classic) to increase the number of minority cases in a dataset used for machine learning. This statistical technique helped us to create new samples with a range of albedo values for which we had no data before. Overall, 283 roof samples were used as input for the roofs model and 2294 pavement samples were used as input for the pavement model. The samples were selected in a way to have a more diverse and balanced training data.  
+* measured or known albedo values of specific materials/sites at specific times. We collected roof and pavement albedo measurements from roof manufactures installers and researchers. Currently we have known albedo values associated with specific measurement or installation dates for over 30,000 unique roofs or pavement location in approximately 45 US states. However, most of the roof samples were associated with high albedo values and there were very small number of samples with low albedo values. So, we employed two techniques to cover up the lack of training data: pixel sampling and SMOTE. Rather than using all the pixels within a roof or street, we selected 20 random pixels as input. This gave us the opportunity to select multiple sample of 20 pixels from underrepresented cases. SMOTE (Synthetic Minority Oversampling Technique) is a method in Azure Machine Learning Studio (classic) to increase the number of minority cases in a dataset used for machine learning. This statistical technique helped us to create new samples with a range of albedo values for which we had no data before. Overall, 283 roof samples were used as input for the roofs model and 2294 pavement samples were used as input for the pavement model. The samples were selected in a way to have a more diverse and balanced training data. 
+
+##### Training data for roof model:
+![Training data for roof model:](https://github.com/wri/UrbanHeatMitigation/blob/master/train_data_roof_model.png)
+
+##### Training data for street model:
+![Training data for street model:](https://github.com/wri/UrbanHeatMitigation/blob/master/train_data_street_model.png)
+
 * geometries of training site/material. Microsoft footprint data was used as the main source of geometries for the roofs training data. For pavement, Google Direction API was used to get the centerline of the streets. The centerline was then buffered 2m in each side to get the geometry of the streets.
 * high-resolution four-band imagery of training sites from within 6-months of site measurement. National Agriculture Imagery Program (NAIP) was used as the source of imagery which has 1m resolution.
 #### Prediction: 
@@ -61,9 +68,19 @@ Validation score for the model: Before training, the data was split into a 70:30
 * root mean squared error from validation set: 0.013993
 * coefficient of determination from validation set: 0.997422
 
-Average precision scores: For buildings present in multiple images we were able to produce multiple predictions. The duplicate predictions were used to estimate the precision error of the albedo values. The scores from multiple years were averaged to get an overall precision score.
-* mean absolute error from duplicate predictions: 0.0034
-* root mean squared error from duplicate predictions: 0.0322
+##### Validation accuracy curve for roof model:
+![Validation accuracy curve for roof model:](https://github.com/wri/UrbanHeatMitigation/blob/master/valid_curve_roof_model.png)
+
+##### Validation accuracy curve for street model:
+![Validation accuracy curve for street model:](https://github.com/wri/UrbanHeatMitigation/blob/master/valid_curve_street_model.png)
+
+##### Average precision scores: 
+For buildings present in multiple images we were able to produce multiple predictions. The duplicate predictions were used to estimate the precision error of the albedo values. The scores from multiple years were averaged to get an overall precision score.
+* mean absolute error from duplicate predictions: 0.04202
+* root mean squared error from duplicate predictions: 0.0995
+
+##### Precision score for multiple years:
+![Precision score for multiple years:](https://github.com/wri/UrbanHeatMitigation/blob/master/precision_score_roof_models.png)
 
 #### Comparison to Ban-Weiss prediction:
 Visual comparison:
@@ -91,14 +108,20 @@ The change in albedo between multiple years is an important factor to check the 
 ![histogram_change_2009-12](https://github.com/wri/UrbanHeatMitigation/blob/master/histogram_change_2009-12.png)
 
 The mean change looks to be approximately 0. One standard deviation is about 0.09. Nearly 75 thousand roofs had no essentially no change over the 3-year time period. 
-We also wanted to get an idea about how roofs with certain albedo values are changing over time. So, we created a scatterplot to see how roofs in each albedo range changed between 2009 and 2012. 
+We also wanted to get an idea about how roofs with certain albedo values are changing over time. So, we created a boxplot and a scatterplot to see how roofs in each albedo range changed between 2009 and 2012. 
+
+![box-plot_change_2009-12](https://github.com/wri/UrbanHeatMitigation/blob/master/box_plot_change_2009-12.png)
 
 ![scatter_change_2009-12](https://github.com/wri/UrbanHeatMitigation/blob/master/scatter_change_2009-12.png)
 
-The scatterplot shows that the roofs with low albedo predictions (between 0 and 0.3) were more consistent over time. There was a decrease in predicted albedo from 2009 to 2012 for high albedo roofs.
+Both the boxplot and the scatterplot shows that the roofs with low albedo predictions (between 0 and 0.3) were more consistent over time. There was a decrease in predicted albedo from 2009 to 2012 for high albedo roofs.
 
 ### Sample final output of albedo map
+##### Prediction of mean albedo for every roof/street:
 ![Sample output](https://github.com/wri/UrbanHeatMitigation/blob/master/sample_output.PNG)
+
+##### ArcGIS Webapp viewer:
+![Sample output](https://github.com/wri/UrbanHeatMitigation/blob/master/sample_webapp_result.png)
 
 ### Uses and Limitations:
 The methods and models presented here have several limitations.
